@@ -1,0 +1,42 @@
+<head></head>
+<body>
+    <input id="pacakge" placeholder="package" oninput="templater.onPackageChange(this)">
+    <input id="type" placeholder="type" oninput="templater.onTypeChange(this)">
+    <pre id="code"></pre>
+    <script>
+
+        function generateCode(package, type) {
+            return `
+func (t ${type}Set) Add(tags ...${package}.${type}) {
+    for _, tag := range tags {
+        t[tag] = struct{}{}
+    }
+}`
+        }
+
+        let templater = (function() {
+
+            let pacakge = ""
+            let type = ""
+
+            return {
+                // Expect a textarea element
+                "onPackageChange": function(ele) {
+                    package = ele.value
+                    let code = generateCode(package, type)
+                    let codeEle = document.getElementById("code")
+                    codeEle.textContent = code
+                },
+                // Expect a textarea element
+                "onTypeChange": function(ele) {
+                    type = ele.value
+                    let code = generateCode(package, type)
+                    let codeEle = document.getElementById("code")
+                    codeEle.textContent = code
+                },
+            }
+        })()
+
+
+    </script>
+</body>
