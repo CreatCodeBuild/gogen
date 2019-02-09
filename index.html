@@ -1,42 +1,49 @@
 <head></head>
 <body>
     <input id="pacakge" placeholder="package" oninput="templater.onPackageChange(this)">
+    Include package<input id="includePackage" type="checkbox" checked onclick="templater.onIncludePackage(this)">
     <input id="type" placeholder="type" oninput="templater.onTypeChange(this)">
     <pre id="code"></pre>
     <script>
 
         function generateCode(package, type) {
             return `
-type ${type}Set map[${package}.${type}]struct{}
+type ${type}Set map[${package}${type}]struct{}
 
-func (set ${type}Set) Add(tags ...${package}.${type}) {
-    for _, tag := range tags {
-        set[tag] = struct{}{}
+func (set ${type}Set) Contains(element ${package}${type}) bool {
+    _, ok := set[element]
+    return ok
+}
+
+func (set ${type}Set) Add(elements ...${package}${type}) {
+    for _, element := range elements {
+        set[element] = struct{}{}
     }
 }
 
-func (set ${type}Set) Remove(tags ...${package}.${type}) {
-	for _, tag := range tags {
-		delete(set, tag)
+func (set ${type}Set) Remove(elements ...${package}${type}) {
+	for _, element := range elements {
+		delete(set, element)
 	}
 }
 
 func (set ${type}Set) Union(set2 ${type}Set) ${type}Set {
 	set3 := make(${type}Set)
-	set3.Add(set.Slice())
-	set3.Add(set2.Slice())
+	set3.Add(set.Slice()...)
+	set3.Add(set2.Slice()...)
 	return set3
 }
 
-func (set ${type}Set) Or(set2 ${type}Set) ${type}set {
+// Or returns a set set3 such that for each element in set3, this element is in either set or set2.
+func (set ${type}Set) Or(set2 ${type}Set) ${type}Set {
 	return set.Union(set2)
 }
 
 func (set ${type}Set) Intersection(set2 ${type}Set) ${type}Set {
 	set3 := make(${type}Set)
-	for tag := range set2 {
-		if t1.Contains(tag) {
-			set3.Add(tag)
+	for element := range set2 {
+		if set.Contains(element) {
+			set3.Add(element)
 		}
 	}
 	return set3
@@ -47,40 +54,52 @@ func (set ${type}Set) And(set2 ${type}Set) ${type}Set {
 	return set.Intersection(set2)
 }
 
-func (set ${type}Set) Slice() []${package}.${type} {
-	set2 := make([]${package}.${type}, len(set))
+func (set ${type}Set) Slice() []${package}${type} {
+	set2 := make([]${package}${type}, len(set))
 	i := 0
-	for tag := range set {
-		set2[i] = tag
+	for element := range set {
+		set2[i] = element
 		i++
 	}
 	return set2
 }`
         }
 
-        let templater = (function() {
+        function doesIncludePackage() {
+            return document.getElementById("includePackage").checked
+        }
 
-            let pacakge = ""
-            let type = ""
+        let templater = (function(doesIncludePackage) {
+
+            let package = "";
+            let type = "";
+            let includePackage = doesIncludePackage();
+
+            function renderCode() {
+                let packageFill = ""
+                if(includePackage) {
+                    packageFill = package + ".";
+                }
+                let codeEle = document.getElementById("code");
+                codeEle.textContent = generateCode(packageFill, type);
+            }
 
             return {
                 // Expect a textarea element
                 "onPackageChange": function(ele) {
-                    package = ele.value
-                    let code = generateCode(package, type)
-                    let codeEle = document.getElementById("code")
-                    codeEle.textContent = code
+                    package = ele.value;
+                    renderCode(package, type)
                 },
                 // Expect a textarea element
                 "onTypeChange": function(ele) {
-                    type = ele.value
-                    let code = generateCode(package, type)
-                    let codeEle = document.getElementById("code")
-                    codeEle.textContent = code
+                    type = ele.value;
+                    renderCode(package, type)
                 },
+                "onIncludePackage": function(ele) {
+                    includePackage = ele.checked
+                    renderCode(package, type)
+                }
             }
-        })()
-
-
+        })(doesIncludePackage)
     </script>
 </body>
