@@ -10,6 +10,12 @@
             return `
 type ${type}Set map[${package}${type}]struct{}
 
+func New${type}Set(elements ...${package}${type}) ${package}${type}Set {
+    set := ${package}${type}Set{}
+    set.Add(elements...)
+    return set
+}
+
 func (set ${type}Set) Contains(element ${package}${type}) bool {
     _, ok := set[element]
     return ok
